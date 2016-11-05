@@ -74,7 +74,7 @@ class JWTAPI
         }
         $header = json_decode(base64_decode($token_parts[0]));
         $payload = json_decode(base64_decode($token_parts[1]));
-        if(! $application = $this->applicationModel->where('name',$payload->sub)->first()){
+        if(! $application = $this->applicationModel->where('name',$payload->aud)->first()){
             return false;
         }
 
@@ -84,28 +84,28 @@ class JWTAPI
             return false;
         }
         $this->application = $application;
-        $this->userId = property_exists($payload->aub, 'user') ? $payload->aub->user : null;
-        $this->userPermissions = property_exists($payload->aub, 'permissions') ? $payload->aub->permissions : [];
+        $this->userId = property_exists($payload->sub, 'user') ? $payload->sub->user : null;
+        $this->userPermissions = property_exists($payload->sub, 'permissions') ? $payload->sub->permissions : [];
         return true;
     }
 
     public function forApplication($application, $userId = null, $permissions = [])
     {
-        $aub = [];
+        $sub = [];
         if($userId) {
-            $aub['user'] = $userId;
+            $sub['user'] = $userId;
         }
-            if (is_array($permissions) && count($permissions) > 0){
-                foreach ($permissions as $permission) {
-                    if(is_string($permission))
-                        $aub['permissions'][] = $permission;
-                }
+        if (is_array($permissions) && count($permissions) > 0){
+            foreach ($permissions as $permission) {
+                if(is_string($permission))
+                    $sub['permissions'][] = $permission;
             }
+        }
 
         $this->jws->setPayload([
             'iss' => $this->issuer,
-            'sub' => $application->name,
-            'aub' => $aub,
+            'aud' => $application->name,
+            'sub' => $sub,
             'iat' => time(),
             'nbf' => time(),
             'exp' => time() + $this->ttl

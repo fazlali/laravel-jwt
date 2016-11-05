@@ -74,7 +74,7 @@ class JWTAuth
         }
         $header = json_decode(base64_decode($token_parts[0]));
         $payload = json_decode(base64_decode($token_parts[1]));
-        if($this->appName != $payload->sub){
+        if($this->appName != $payload->aud){
             return false;
         }
         $this->jws->setPayload($payload);
@@ -82,7 +82,7 @@ class JWTAuth
         if(! $result =  $this->jws->isValid($this->secret,$header->alg)){
             return false;
         }
-        $userId = property_exists($payload->aub, 'user') ? $payload->aub->user : null;
+        $userId = property_exists($payload->sub, 'user') ? $payload->sub->user : null;
 
         if(! $this->user = $this->userModel->find($userId))
             return false;
@@ -114,21 +114,21 @@ class JWTAuth
     public function fromUser($user = null){
 
         $user = $user ?: $this->auth->user();
-        $aub = [];
+        $sub = [];
         if($user) {
-            $aub['user'] = $user->id;
+            $sub['user'] = $user->id;
             $permissions =method_exists($user, 'permissions') ? $user->permissions() : [];
             if (is_array($permissions) && count($permissions) > 0){
                 foreach ($permissions as $permission) {
                     if(is_string($permission))
-                        $aub['permissions'][] = $permission;
+                        $sub['permissions'][] = $permission;
                 }
             }
         }
         $this->jws->setPayload([
             'iss' => $this->appName,
-            'sub' => $this->appName,
-            'aub' => $aub,
+            'aud' => $this->appName,
+            'sub' => $sub,
             'iat' => time(),
             'nbf' => time(),
             'exp' => time() + $this->ttl
