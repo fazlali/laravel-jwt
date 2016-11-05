@@ -13,6 +13,6 @@ class JWTAuth extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return 'fazlali.jwt.auth';
+        return 'fazlali.laravel-jwt.auth';
     }
 }

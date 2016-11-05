@@ -6,22 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class Application extends Model
 {
-    public function user()
+    public function setOriginsAttribute($value)
     {
-        return $this->belongsTo('App\User');
+        $value = collect($value)->filter(function ($item){
+            return $item;
+        });
+        return $this->attributes['origins'] = $value->toJson();
+
     }
 
-    public function videos (){
-        return $this->hasMany('App\Video');
+    public function getOriginsAttribute($value)
+    {
+        $value = $value ?:"[]";
+        return json_decode($value);
     }
-
-    public function contents (){
-        return $this->hasMany('App\content');
-    }
-
-    public function origins (){
-        return $this->hasMany('App\JWT\Origin');
-    }
-
-
 }

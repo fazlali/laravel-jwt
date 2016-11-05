@@ -13,11 +13,13 @@ class JWTAPI
     protected $request;
     protected $applicationModel;
     protected $auth;
+    protected $issuer;
 
     public function __construct(Request $request)
     {
-        $this->applicationModel = app(config('jwt.api.models.application'));
-        $this->jws = new JWS(['alg' => config('jwt.algo')]);
+        $this->applicationModel = app(config('laravel-jwt.api.models.application'));
+        $this->jws = new JWS(['alg' => config('laravel-jwt.algo')]);
+        $this->issuer = config('app.name', config('app.url'));
         $this->setRequest ($request);
     }
 
@@ -72,33 +74,42 @@ class JWTAPI
         }
         $header = json_decode(base64_decode($token_parts[0]));
         $payload = json_decode(base64_decode($token_parts[1]));
-        if(! $application = $this->applicationModel->where('name',$payload->iss)->first()){
+        if(! $application = $this->applicationModel->where('name',$payload->sub)->first()){
             return false;
         }
+
+        $this->jws->setPayload($payload);
+        $this->jws->setHeader($header);
         if(! $result =  $this->jws->isValid($application->secret,$header->alg)){
             return false;
         }
         $this->application = $application;
-        $userData = explode('|', $payload->sub);
-        $this->userId = $userData[0];
-        if(!isset($userData[1]))
-            $userData[1] ='';
-        $this->userPermissions = explode(',', $userData[1]);
+        $this->userId = property_exists($payload->aub, 'user') ? $payload->aub->user : null;
+        $this->userPermissions = property_exists($payload->aub, 'permissions') ? $payload->aub->permissions : [];
         return true;
     }
 
     public function forApplication($application, $userId = null, $permissions = [])
     {
-        $sub = "";
+        $aub = [];
         if($userId) {
-
-            if (is_array($permissions) && count($permissions))
-                $permissions = '|' . implode(',', $permissions);
-            else
-                $permissions = '';
-            $sub = "$userId$permissions";
+            $aub['user'] = $userId;
         }
-        $this->jws->setPayload(['iss' => $application->name, 'sub' => $sub, 'iat' => time()]);
+            if (is_array($permissions) && count($permissions) > 0){
+                foreach ($permissions as $permission) {
+                    if(is_string($permission))
+                        $aub['permissions'][] = $permission;
+                }
+            }
+
+        $this->jws->setPayload([
+            'iss' => $this->issuer,
+            'sub' => $application->name,
+            'aub' => $aub,
+            'iat' => time(),
+            'nbf' => time(),
+            'exp' => time() + $this->ttl
+        ]);
         $this->jws->sign($application->secret);
         return $this->jws->getTokenString();
     }

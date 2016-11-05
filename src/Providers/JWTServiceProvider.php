@@ -11,7 +11,7 @@ class JWTServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            __DIR__ . '/../config/config.php' => config_path('jwt.php')
+            __DIR__ . '/../config/config.php' => config_path('laravel-jwt.php')
         ], 'config');
         $this->publishes([
             __DIR__ . '/../Models/' => app_path()
@@ -34,7 +34,6 @@ class JWTServiceProvider extends ServiceProvider
         $this->app->bind('fazlali.jwt.auth', function($app){
             return new \Fazlali\LaravelJWT\JWTAuth($app['request'], $app['auth']);
         });
-//        $this->app->bind('fazlali.jwt.auth', 'Fazlali\LaravelJWT\JWTAuth');
 
     }
 

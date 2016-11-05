@@ -14,14 +14,16 @@ class JWTAuth
     protected $auth;
     protected $appName;
     protected $secret;
+    protected $ttl;
 
     public function __construct( $request, $auth)
     {
-        $this->userModel = app(config('jwt.models.user'));
+        $this->userModel = app(config('laravel-jwt.models.user'));
         $this->auth = $auth;
-        $this->appName = config('jwt.auth.app_name');
-        $this->secret = config('jwt.auth.secret');
-        $this->jws = new JWS(['alg' => config('jwt.algo')]);
+        $this->appName = config('laravel-jwt.auth.app_name');
+        $this->secret = config('laravel-jwt.auth.secret');
+        $this->jws = new JWS(['alg' => config('laravel-jwt.algo')]);
+        $this->ttl = config('laravel-jwt.ttl', 60) * 60;
         $this->setRequest($request);
     }
 
@@ -72,13 +74,17 @@ class JWTAuth
         }
         $header = json_decode(base64_decode($token_parts[0]));
         $payload = json_decode(base64_decode($token_parts[1]));
-        if($this->appName != $payload->iss){
+        if($this->appName != $payload->sub){
             return false;
         }
+        $this->jws->setPayload($payload);
+        $this->jws->setHeader($header);
         if(! $result =  $this->jws->isValid($this->secret,$header->alg)){
             return false;
         }
-        if(! $this->user = $this->userModel->find(explode('|',$payload->sub)[0]))
+        $userId = property_exists($payload->aub, 'user') ? $payload->aub->user : null;
+
+        if(! $this->user = $this->userModel->find($userId))
             return false;
         if( $this->user->jwtValidSince && ($validSince = $this->user->{$this->user->jwtValidSince}() )){
             if((isset($payload->iat) ? $payload->iat : 0) < (isset($validSince) ? $validSince->timestamp : 0) ){
@@ -108,17 +114,25 @@ class JWTAuth
     public function fromUser($user = null){
 
         $user = $user ?: $this->auth->user();
-        $sub = "";
+        $aub = [];
         if($user) {
-            $permissions = $user->{$user->permissions}();
-
-            if (count($permissions))
-                $permissions = '|' . implode(',', $permissions);
-            else
-                $permissions = '';
-            $sub = "$user->id$permissions";
+            $aub['user'] = $user->id;
+            $permissions =method_exists($user, 'permissions') ? $user->permissions() : [];
+            if (is_array($permissions) && count($permissions) > 0){
+                foreach ($permissions as $permission) {
+                    if(is_string($permission))
+                        $aub['permissions'][] = $permission;
+                }
+            }
         }
-        $this->jws->setPayload(['iss' => $this->appName, 'sub' => $sub, 'iat' => time()]);
+        $this->jws->setPayload([
+            'iss' => $this->appName,
+            'sub' => $this->appName,
+            'aub' => $aub,
+            'iat' => time(),
+            'nbf' => time(),
+            'exp' => time() + $this->ttl
+        ]);
         $this->jws->sign($this->secret);
         return $this->jws->getTokenString();
     }

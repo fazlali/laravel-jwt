@@ -21,45 +21,22 @@ class AuthApplication
     }
     public function handle(Request $request, \Closure $next)
     {
-
-//        if (! $this->auth->setRequest($request)) {
-//            abort(403);
-//        }
-
-        if($request->getMethod() == 'OPTIONS'){
-
-            $origin = '*';
-            $response = $next($request);
-        }else {
-//            header('Access-Control-Allow-Origin: *');
-
-            if (!JWTAPI::check()) {
-                abort(403);
-            }
-
-            if ($origin = $request->headers->get('origin')) {
-
-                if (!JWTAPI::application()->origins()->where('host', $origin)->first()) {
-                    abort(403);
-                }
-
-
-
-            }
-            $response = $next($request);
+        if(! $application = \JWTAPI::application()){
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT');
+            header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Key, Authorization');
+            header('Access-Control-Allow-Credentials: true');
+            return response('Access denied.', 403);
         }
-        $headers = [
-            'Access-Control-Allow-Origin' => $origin,
-            'Access-Control-Allow-Methods' => 'POST, GET, OPTIONS, PUT, DELETE',
-            'Access-Control-Allow-Headers' => 'Origin, X-Requested-With, Content-Type, Accept, Key, Authorization',
-            'Access-Control-Allow-Credentials' => 'true'
-        ];
-
-        foreach ($headers as $key => $value)
-            $response->header($key, $value);
-        return $response;
-
-
+        if($origin = $request->headers->get('origin')){
+            if(collect($application->origins)->contains($origin)){
+                header('Access-Control-Allow-Origin: *');
+                header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT');
+                header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Key, Authorization');
+                header('Access-Control-Allow-Credentials: true');
+            }
+        }
+        return $next($request);
 
 
     }

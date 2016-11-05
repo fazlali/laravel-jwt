@@ -13,6 +13,6 @@ class JWTAPI extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return 'fazlali.jwt.api';
+        return 'fazlali.laravel-jwt.api';
     }
 }

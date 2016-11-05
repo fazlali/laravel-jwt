@@ -15,16 +15,14 @@ class CreateApplicationsTable extends Migration
         Schema::create('applications', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name')->unique();
-            $table->string('secret',32);
+            $table->string('secret', 127);
             $table->string('hook',128);
             $table->integer('user_id')->unsigned();
+            $table->binary('origins')->nullable();
             $table->timestamps();
-        });
-
-        Schema::table('applications', function(Blueprint $table){
-           $table->foreign('user_id')
-               ->references('id')->on('users')
-               ->onDelete('cascade');
+            $table->foreign('user_id')
+                ->references('id')->on('users')
+                ->onDelete('cascade');
         });
     }
 

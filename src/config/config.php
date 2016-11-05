@@ -151,7 +151,7 @@ return [
         |
         */
 
-        'app_name' => env('JWT_APP_NAME', 'video'),
+        'app_name' => env('JWT_APP_NAME', 'app-name'),
     ]
 
 ];

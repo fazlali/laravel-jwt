@@ -20,6 +20,7 @@ class Authenticate
     public function __construct(){
 //        $this->auth = new JWTAuth();
     }
+
     public function handle(Request $request, \Closure $next)
     {
         if (!$user = JWTAuth::user()) {
