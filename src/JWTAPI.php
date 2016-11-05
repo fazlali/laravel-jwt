@@ -86,8 +86,8 @@ class JWTAPI
             return false;
         }
         $this->application = $application;
-        $this->userId = property_exists($payload->sub, 'user') ? $payload->sub->user : null;
-        $this->userPermissions = property_exists($payload->sub, 'permissions') ? $payload->sub->permissions : [];
+        $this->userId =(is_object($payload->sub) && property_exists($payload->sub, 'user')) ? $payload->sub->user : null;
+        $this->userPermissions = (is_object($payload->sub) && property_exists($payload->sub, 'permissions')) ? $payload->sub->permissions : [];
         return true;
     }
 

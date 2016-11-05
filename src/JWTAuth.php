@@ -82,7 +82,7 @@ class JWTAuth
         if(! $result =  $this->jws->isValid($this->secret,$header->alg)){
             return false;
         }
-        $userId = property_exists($payload->sub, 'user') ? $payload->sub->user : null;
+        $userId = (is_object($payload->sub) && property_exists($payload->sub, 'user')) ? $payload->sub->user : null;
 
         if(! $this->user = $this->userModel->find($userId))
             return false;
