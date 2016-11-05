@@ -80,8 +80,8 @@ class JWTAPI
             return false;
         }
 
-        $this->jws->setPayload($payload);
-        $this->jws->setHeader($header);
+        $this->jws->setPayload((array)$payload);
+        $this->jws->setHeader((array)$header);
         if(! $result =  $this->jws->isValid($application->secret,$header->alg)){
             return false;
         }

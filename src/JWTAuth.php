@@ -77,8 +77,8 @@ class JWTAuth
         if($this->appName != $payload->aud){
             return false;
         }
-        $this->jws->setPayload($payload);
-        $this->jws->setHeader($header);
+        $this->jws->setPayload((array)$payload);
+        $this->jws->setHeader((array)$header);
         if(! $result =  $this->jws->isValid($this->secret,$header->alg)){
             return false;
         }
