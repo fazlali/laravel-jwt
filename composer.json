@@ -2,8 +2,7 @@
     "name": "fazlali/laravel-jwt",
     "require": {
         "php": ">=5.4.0",
-        "namshi/jose": "5.0.*",
-        "laravel/laravel": "5.*.*"
+        "namshi/jose": "5.0.*"
     },
     "authors": [
         {
