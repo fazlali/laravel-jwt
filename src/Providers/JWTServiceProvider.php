@@ -28,10 +28,10 @@ class JWTServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->bind('fazlali.jwt.api', function($app){
+        $this->app->bind('fazlali.laravel-jwt.api', function($app){
             return new \Fazlali\LaravelJWT\JWTAPI($app['request']);
         });
-        $this->app->bind('fazlali.jwt.auth', function($app){
+        $this->app->bind('fazlali.laravel-jwt.auth', function($app){
             return new \Fazlali\LaravelJWT\JWTAuth($app['request'], $app['auth']);
         });
 
