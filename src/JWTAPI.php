@@ -14,12 +14,14 @@ class JWTAPI
     protected $applicationModel;
     protected $auth;
     protected $issuer;
+    protected $ttl;
 
     public function __construct(Request $request)
     {
         $this->applicationModel = app(config('laravel-jwt.api.models.application'));
         $this->jws = new JWS(['alg' => config('laravel-jwt.algo')]);
         $this->issuer = config('app.name', config('app.url'));
+        $this->ttl = config('laravel-jwt.ttl', 60) *60;
         $this->setRequest ($request);
     }
 
